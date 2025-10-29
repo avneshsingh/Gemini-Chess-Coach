@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Chess Auto-Coach",
+  "description": "An interactive chess board that uses the Gemini 2.5 Pro to provide real-time coaching advice after every move you make. Analyze positions and learn better strategies with AI-powered insights.",
+  "requestFramePermissions": []
+}
