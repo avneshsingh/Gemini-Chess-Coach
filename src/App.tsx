@@ -199,22 +199,40 @@ const App: React.FC = () => {
     if (!game.current) return;
     
     game.current = new (window.Chess)();
-    setGameConfig({ mode, playerColor });
     setFen(game.current.fen());
     updateStatus();
     setChatHistory([]);
     chatSession.current = null;
+    
+    // Set the game config. The bot's first move will be triggered by a useEffect.
+    setGameConfig({ mode, playerColor });
 
-    if (mode === 'pve') {
-      if (playerColor === 'b') {
-        setTimeout(() => makeBotMove(), 500);
-      } else {
-        fetchAdvice();
-      }
-    } else {
+    // Fetch initial advice only if it's the player's turn to move first.
+    if (mode === 'pvp' || (mode === 'pve' && playerColor === 'w')) {
       fetchAdvice();
     }
-  }, [updateStatus, fetchAdvice, makeBotMove]);
+  }, [updateStatus, fetchAdvice]);
+
+  // This new effect reliably triggers the bot's first move when the player chooses black.
+  useEffect(() => {
+    // Check if the game is configured for a PvE match, the player is Black,
+    // it's White's (the bot's) turn, and it's the very beginning of the game.
+    if (
+      gameConfig &&
+      gameConfig.mode === 'pve' &&
+      gameConfig.playerColor === 'b' &&
+      game.current?.turn() === 'w' &&
+      game.current?.history().length === 0
+    ) {
+      // A short delay makes it feel like the bot is "thinking" and allows UI to render.
+      const timer = setTimeout(() => {
+        makeBotMove();
+      }, 500);
+
+      // Cleanup the timer if the component re-renders or unmounts.
+      return () => clearTimeout(timer);
+    }
+  }, [gameConfig, makeBotMove]);
 
 
   return (
